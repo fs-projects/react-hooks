@@ -74,7 +74,7 @@ const CustomInputFormWithReactHook = () => {
 
 const App = () => {
   return (
-    <BaseContext.Provider value={{ base: 'Welcome ' }}>
+    <BaseContext.Provider value={{ base: 'Hello ' }}>
       <CustomInputFormWithReactHook />
     </BaseContext.Provider>
   );
