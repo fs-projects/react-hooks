@@ -1,6 +1,7 @@
 import React from 'react';
 import { useState, useContext, createContext } from 'react';
 import customInputHook from './customInputHook';
+import CountDownTimer from './countdownTimer';
 import { render } from 'react-dom';
 import './style.css';
 
@@ -75,7 +76,7 @@ const CustomInputFormWithReactHook = () => {
 const App = () => {
   return (
     <BaseContext.Provider value={{ base: 'Hello ' }}>
-      <CustomInputFormWithReactHook />
+      <CountDownTimer />
     </BaseContext.Provider>
   );
 };
