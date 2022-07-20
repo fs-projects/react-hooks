@@ -9,19 +9,52 @@ function CountDownTimer() {
 
   const [isActive, setIsActive] = useState(false);
   const [counter, setCounter] = useState(0);
+  const [startClicked, setStartClicked] = useState({
+    count: 0,
+    handled: null,
+  });
 
   const minutesRef = useRef();
   const secondsRef = useRef();
 
+  let intervalId;
   useEffect(() => {
     console.log('effect called..');
-    let intervalId;
+
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
+
+    if (!startClicked.handled && startClicked.count > 1) {
+      setStartClicked((prev) => ({ ...prev, handled: true }));
+      const secondInputInitial = secondInputVal;
+      if (secondInputInitial >= 0 && secondInputInitial < 10) {
+        setSecond(`0${secondInputInitial}`);
+      } else {
+        if (secondInputInitial === '') {
+          setSecond(`00`);
+        } else {
+          setSecond(secondInputInitial);
+        }
+      }
+      const minuteInputInitial = minuteInputVal;
+      if (minuteInputInitial >= 0 && minuteInputInitial < 10) {
+        setMinute(`0${minuteInputInitial}`);
+      } else {
+        if (minuteInputInitial === '') {
+          setMinute(`00`);
+        } else {
+          setMinute(minuteInputInitial);
+        }
+      }
+    }
+
+    let secondCounter = parseInt(second);
+    let minuteCounter = parseInt(minute);
+    console.log('1111', minute, second);
 
     if (isActive) {
       intervalId = setInterval(() => {
-        console.log('1111', minute, second);
-        let secondCounter = parseInt(second);
-        let minuteCounter = parseInt(minute);
         if (secondCounter >= 0 && secondCounter <= 10) {
           if (secondCounter === 0) {
             setSecond('00');
@@ -41,27 +74,34 @@ function CountDownTimer() {
             }
           });
         }
-        if (minuteCounter >= 0 && minuteCounter <= 10) {
+        if (minuteCounter >= 0 && minuteCounter <= 10 && secondCounter === 0) {
           if (minuteCounter === 0) {
             setMinute('00');
           } else if (minuteCounter === 1 && secondCounter === 0) {
             setMinute(`00`);
             setSecond('59');
+          } else if (minuteCounter === 0) {
+            stopTimer();
+            clearInterval(intervalId);
+            return;
           } else {
             setMinute((prev) => {
               let prevTimeUpdated = parseInt(prev) - 1;
               return `0${prevTimeUpdated}`;
             });
+            setSecond('59');
           }
         } else {
-          setMinute((prev) => {
-            let prevTimeUpdated = parseInt(prev) - 1;
-            if (prevTimeUpdated >= 0) {
-              return prevTimeUpdated;
-            } else {
-              return `00`;
-            }
-          });
+          if (secondCounter === 0) {
+            setMinute((prev) => {
+              let prevTimeUpdated = parseInt(prev) - 1;
+              if (prevTimeUpdated >= 0) {
+                return prevTimeUpdated;
+              } else {
+                return `00`;
+              }
+            });
+          }
         }
 
         setCounter((counter) => counter + 1);
@@ -69,33 +109,82 @@ function CountDownTimer() {
     }
 
     return () => clearInterval(intervalId);
-  }, [isActive, counter]);
+  }, [isActive, counter, startClicked.count]);
 
   function stopTimer() {
     setIsActive(false);
     setCounter(0);
     setSecond('00');
     setMinute('00');
+    setSecondInputVal(0);
+    setMinuteInputVal(0);
   }
 
   const handleMinuteChange = () => {
     const val = minutesRef.current.value;
-    if (val > 0 && val < 10) {
+    // if (intervalId) {
+    //   setMinuteInputVal(val);
+    //   return;
+    // }
+    if (val >= 0 && val < 10) {
       setMinute(`0${val}`);
     } else {
-      setMinute(val);
+      if (val === '') {
+        setMinute(`00`);
+      } else {
+        setMinute(val);
+      }
     }
     setMinuteInputVal(val);
   };
 
   const handleSecondChange = () => {
     const val = secondsRef.current.value;
-    if (val > 0 && val < 10) {
-      setSecond(`0${val}`);
+    // if (intervalId) {
+    //   setSecondInputVal(val);
+    //   return;
+    // }
+    if (minuteInputVal === 0) {
+      setMinute('00');
+    }
+    let remainingSeconds;
+    if (val > 60) {
+      let additonalMinutes = Math.floor(val / 60);
+      remainingSeconds = val % 60;
+      let totalMinutes = parseInt(minute) + additonalMinutes;
+      if (totalMinutes > 0 && totalMinutes < 10) {
+        setMinute(`0${totalMinutes}`);
+      } else {
+        setMinute(totalMinutes);
+      }
+      if (remainingSeconds >= 0 && remainingSeconds < 10) {
+        setSecond(`0${remainingSeconds}`);
+      } else {
+        setSecond(remainingSeconds);
+      }
     } else {
-      setSecond(val);
+      let orginalVal = val;
+      if (remainingSeconds) {
+        orginalVal = remainingSeconds;
+      }
+      if (orginalVal === '') {
+        setSecond(`00`);
+      } else if (orginalVal >= 0 && orginalVal < 10) {
+        setSecond(`0${orginalVal}`);
+      } else {
+        setSecond(orginalVal);
+      }
     }
     setSecondInputVal(val);
+  };
+
+  const handleStartClicked = () => {
+    setIsActive(true);
+    setStartClicked((prev) => ({
+      ...prev,
+      count: prev.count + 1,
+      handled: null,
+    }));
   };
 
   return (
@@ -119,7 +208,7 @@ function CountDownTimer() {
         />
       </label>
 
-      <button onClick={() => setIsActive(true)}>START</button>
+      <button onClick={handleStartClicked}>START</button>
       <button onClick={() => setIsActive(!isActive)}>PAUSE / RESUME</button>
       <button onClick={stopTimer}>RESET</button>
 
